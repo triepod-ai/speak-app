@@ -1,0 +1,43 @@
+{
+  "generated": "2025-07-18T12:10:14.568624",
+  "source_file": "test_messages.txt",
+  "voice": "onyx",
+  "model": "tts-1",
+  "items": [
+    {
+      "index": 1,
+      "text": "Test message one",
+      "file": "001_test_message_one.mp3",
+      "cached": true,
+      "cost": 0.0
+    },
+    {
+      "index": 2,
+      "text": "Build complete",
+      "file": "002_build_complete.mp3",
+      "cached": true,
+      "cost": 0.0
+    },
+    {
+      "index": 3,
+      "text": "Tests passed",
+      "file": "003_tests_passed.mp3",
+      "cached": true,
+      "cost": 0.0
+    },
+    {
+      "index": 4,
+      "text": "Error detected",
+      "file": "004_error_detected.mp3",
+      "cached": true,
+      "cost": 0.0
+    },
+    {
+      "index": 5,
+      "text": "Ready for deployment",
+      "file": "005_ready_for_deployment.mp3",
+      "cached": true,
+      "cost": 0.0
+    }
+  ]
+}

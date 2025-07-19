@@ -1,0 +1,325 @@
+#!/bin/bash
+# speak - Global TTS command for text-to-speech functionality
+# Uses the TTS provider infrastructure with support for multiple providers
+
+set -euo pipefail
+
+# Script configuration
+# Get the real path of the script (following symlinks)
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+TTS_DIR="${SCRIPT_DIR}/tts"
+TTS_PROVIDER_SCRIPT="${TTS_DIR}/tts_provider.py"
+
+# Default configuration
+DEFAULT_PROVIDER="auto"
+DEFAULT_TIMEOUT=30
+
+# Color codes for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to display help
+show_help() {
+    cat << EOF
+speak - Text-to-speech command with multiple provider support
+
+USAGE:
+    speak [OPTIONS] [TEXT]
+    echo "text" | speak [OPTIONS]
+
+OPTIONS:
+    -p, --provider PROVIDER   Use specific TTS provider (elevenlabs, openai, pyttsx3, auto)
+    -l, --list               List available TTS providers
+    -t, --test               Test TTS with a sample message
+    -e, --enable             Enable TTS globally
+    -d, --disable            Disable TTS globally
+    -s, --status             Show current TTS status and configuration
+    -o, --off                Skip TTS for this invocation (useful in scripts)
+    -v, --voice VOICE        Set voice ID or name for providers that support it
+    --stability STABILITY    Set voice stability (0.0-1.0) for ElevenLabs
+    --similarity-boost BOOST Set voice similarity boost (0.0-1.0) for ElevenLabs
+    --list-voices            List available voices for ElevenLabs
+    --test-voice VOICE       Test a specific voice
+    -h, --help               Show this help message
+
+EXAMPLES:
+    speak "Hello, world!"
+    speak --provider elevenlabs "Using ElevenLabs voice"
+    speak --voice Rachel "Using Rachel voice"
+    speak --voice 21m00Tcm4TlvDq8ikWAM "Using voice by ID"
+    speak --stability 0.8 --similarity-boost 0.9 "Custom voice settings"
+    speak --list-voices
+    speak --test-voice Rachel
+    echo "Testing complete" | speak
+    speak --test
+    speak --list
+    speak --status
+
+CONFIGURATION:
+    The speak command respects these environment variables:
+    - TTS_ENABLED: Enable/disable TTS (true/false)
+    - TTS_PROVIDER: Default provider (auto/elevenlabs/openai/pyttsx3)
+    - ENGINEER_NAME: Name for personalized messages
+    - ELEVENLABS_API_KEY: API key for ElevenLabs
+    - OPENAI_API_KEY: API key for OpenAI
+
+    Configuration is loaded from ~/brainpods/.env if available.
+
+EOF
+}
+
+# Function to check if TTS provider is available
+check_tts_provider() {
+    if [[ ! -f "$TTS_PROVIDER_SCRIPT" ]]; then
+        echo -e "${RED}Error: TTS provider not found at $TTS_PROVIDER_SCRIPT${NC}" >&2
+        echo "Please run the setup to copy TTS infrastructure to ~/bin/tts/" >&2
+        return 1
+    fi
+    return 0
+}
+
+# Function to list available providers
+list_providers() {
+    if ! check_tts_provider; then
+        return 1
+    fi
+    
+    echo -e "${BLUE}Checking available TTS providers...${NC}"
+    python3 "$TTS_PROVIDER_SCRIPT" --list 2>/dev/null || {
+        # Fallback if --list is not implemented
+        python3 -c "
+import sys
+sys.path.insert(0, '$TTS_DIR')
+from tts_provider import TTSProvider
+tts = TTSProvider()
+providers = tts.get_available_providers()
+print('Available providers:', ', '.join(providers))
+selected = tts.select_provider()
+print('Auto-selected provider:', selected if selected else 'None')
+"
+    }
+}
+
+# Function to show status
+show_status() {
+    echo -e "${BLUE}TTS Configuration Status${NC}"
+    echo "========================"
+    
+    # Check environment variables
+    echo -e "\n${YELLOW}Environment Variables:${NC}"
+    echo "TTS_ENABLED: ${TTS_ENABLED:-not set}"
+    echo "TTS_PROVIDER: ${TTS_PROVIDER:-not set}"
+    echo "ENGINEER_NAME: ${ENGINEER_NAME:-not set}"
+    echo "ELEVENLABS_API_KEY: $([ -n "${ELEVENLABS_API_KEY:-}" ] && echo "***configured***" || echo "not set")"
+    echo "OPENAI_API_KEY: $([ -n "${OPENAI_API_KEY:-}" ] && echo "***configured***" || echo "not set")"
+    
+    # Check if TTS is enabled
+    local enabled="${TTS_ENABLED:-true}"
+    if [[ "$enabled" == "true" ]]; then
+        echo -e "\n${GREEN}TTS is ENABLED${NC}"
+    else
+        echo -e "\n${RED}TTS is DISABLED${NC}"
+    fi
+    
+    # List available providers
+    echo -e "\n${YELLOW}Provider Information:${NC}"
+    list_providers
+}
+
+# Function to enable TTS
+enable_tts() {
+    export TTS_ENABLED=true
+    echo -e "${GREEN}TTS enabled for this session${NC}"
+    echo "To make this permanent, add to your shell configuration:"
+    echo "  export TTS_ENABLED=true"
+}
+
+# Function to disable TTS
+disable_tts() {
+    export TTS_ENABLED=false
+    echo -e "${YELLOW}TTS disabled for this session${NC}"
+    echo "To make this permanent, add to your shell configuration:"
+    echo "  export TTS_ENABLED=false"
+}
+
+# Function to test TTS
+test_tts() {
+    local test_message="${1:-TTS system test successful. Voice synthesis is working correctly.}"
+    echo -e "${BLUE}Testing TTS with message: \"$test_message\"${NC}"
+    speak_text "$test_message"
+}
+
+# Function to speak text
+speak_text() {
+    local text="$1"
+    local provider="${2:-$DEFAULT_PROVIDER}"
+    
+    # Check if TTS is disabled via --off flag or environment
+    if [[ "${SKIP_TTS:-false}" == "true" ]] || [[ "${TTS_ENABLED:-true}" == "false" ]]; then
+        return 0
+    fi
+    
+    # Check if TTS provider is available
+    if ! check_tts_provider; then
+        return 1
+    fi
+    
+    # Set up environment for the Python script
+    export TTS_PROVIDER="${provider}"
+    
+    # Build command with voice parameters
+    local cmd_args=("$text")
+    if [[ -n "$VOICE_ID" ]]; then
+        cmd_args+=("--voice-id" "$VOICE_ID")
+    fi
+    if [[ -n "$STABILITY" ]]; then
+        cmd_args+=("--stability" "$STABILITY")
+    fi
+    if [[ -n "$SIMILARITY_BOOST" ]]; then
+        cmd_args+=("--similarity-boost" "$SIMILARITY_BOOST")
+    fi
+    if [[ "$provider" != "auto" ]]; then
+        cmd_args+=("--provider" "$provider")
+    fi
+    
+    # Call the TTS provider
+    python3 "$TTS_PROVIDER_SCRIPT" "${cmd_args[@]}" 2>/dev/null || {
+        echo -e "${RED}TTS failed with provider: $provider${NC}" >&2
+        return 1
+    }
+}
+
+# Parse command line arguments
+PROVIDER="$DEFAULT_PROVIDER"
+SKIP_TTS=false
+TEXT=""
+ACTION=""
+VOICE_ID=""
+STABILITY=""
+SIMILARITY_BOOST=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -p|--provider)
+            PROVIDER="$2"
+            shift 2
+            ;;
+        -l|--list)
+            ACTION="list"
+            shift
+            ;;
+        -t|--test)
+            ACTION="test"
+            shift
+            ;;
+        -e|--enable)
+            ACTION="enable"
+            shift
+            ;;
+        -d|--disable)
+            ACTION="disable"
+            shift
+            ;;
+        -s|--status)
+            ACTION="status"
+            shift
+            ;;
+        -o|--off)
+            SKIP_TTS=true
+            shift
+            ;;
+        -v|--voice)
+            VOICE_ID="$2"
+            shift 2
+            ;;
+        --stability)
+            STABILITY="$2"
+            shift 2
+            ;;
+        --similarity-boost)
+            SIMILARITY_BOOST="$2"
+            shift 2
+            ;;
+        --list-voices)
+            ACTION="list-voices"
+            shift
+            ;;
+        --test-voice)
+            ACTION="test-voice"
+            VOICE_ID="$2"
+            shift 2
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -*)
+            echo -e "${RED}Unknown option: $1${NC}" >&2
+            echo "Use --help for usage information" >&2
+            exit 1
+            ;;
+        *)
+            # Collect all remaining arguments as text
+            TEXT="$*"
+            break
+            ;;
+    esac
+done
+
+# Execute action if specified
+case "$ACTION" in
+    list)
+        list_providers
+        exit $?
+        ;;
+    test)
+        test_tts "$TEXT"
+        exit $?
+        ;;
+    enable)
+        enable_tts
+        exit 0
+        ;;
+    disable)
+        disable_tts
+        exit 0
+        ;;
+    status)
+        show_status
+        exit 0
+        ;;
+    list-voices)
+        if ! check_tts_provider; then
+            exit 1
+        fi
+        echo -e "${BLUE}Listing available voices for ElevenLabs...${NC}"
+        python3 "${TTS_DIR}/elevenlabs_tts.py" --list-voices
+        exit $?
+        ;;
+    test-voice)
+        if ! check_tts_provider; then
+            exit 1
+        fi
+        echo -e "${BLUE}Testing voice: $VOICE_ID${NC}"
+        python3 "${TTS_DIR}/elevenlabs_tts.py" --test-voice "$VOICE_ID"
+        exit $?
+        ;;
+esac
+
+# If no text provided as argument, check for piped input
+if [[ -z "$TEXT" ]]; then
+    if [[ -p /dev/stdin ]]; then
+        TEXT=$(cat)
+    else
+        echo -e "${RED}Error: No text provided${NC}" >&2
+        echo "Usage: speak \"Your text here\" or echo \"text\" | speak" >&2
+        exit 1
+    fi
+fi
+
+# Speak the text
+speak_text "$TEXT" "$PROVIDER"

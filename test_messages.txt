@@ -1,0 +1,5 @@
+Test message one
+Build complete
+Tests passed
+Error detected
+Ready for deployment

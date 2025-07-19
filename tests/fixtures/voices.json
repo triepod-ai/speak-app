@@ -1,0 +1,104 @@
+{
+  "voices": [
+    {
+      "voice_id": "21m00Tcm4TlvDq8ikWAM",
+      "name": "Rachel",
+      "samples": [],
+      "category": "premade",
+      "fine_tuning": {
+        "model_id": "eleven_turbo_v2_5",
+        "is_allowed_to_fine_tune": true,
+        "finetuning_state": "not_finetuned"
+      },
+      "labels": {
+        "accent": "american",
+        "description": "calm",
+        "age": "young",
+        "gender": "female",
+        "use_case": "narration"
+      },
+      "description": "Calm and composed, Rachel's voice is perfect for narration and long-form content.",
+      "preview_url": "https://storage.googleapis.com/eleven-public-prod/premade/voices/21m00Tcm4TlvDq8ikWAM/df6788f9-5c96-470d-8312-aab3b3d8f50a.mp3",
+      "available_for_tiers": [],
+      "settings": {
+        "stability": 0.5,
+        "similarity_boost": 0.75
+      }
+    },
+    {
+      "voice_id": "AZnzlk1XvdvUeBnXmlld",
+      "name": "Domi",
+      "samples": [],
+      "category": "premade",
+      "fine_tuning": {
+        "model_id": "eleven_turbo_v2_5",
+        "is_allowed_to_fine_tune": true,
+        "finetuning_state": "not_finetuned"
+      },
+      "labels": {
+        "accent": "american",
+        "description": "strong",
+        "age": "young",
+        "gender": "female",
+        "use_case": "narration"
+      },
+      "description": "Strong and confident, Domi's voice is perfect for commercials and presentations.",
+      "preview_url": "https://storage.googleapis.com/eleven-public-prod/premade/voices/AZnzlk1XvdvUeBnXmlld/21d01b2c-9b8b-4d7c-9b8b-4d7c9b8b4d7c.mp3",
+      "available_for_tiers": [],
+      "settings": {
+        "stability": 0.6,
+        "similarity_boost": 0.8
+      }
+    },
+    {
+      "voice_id": "EXAVITQu4vr4xnSDxMaL",
+      "name": "Bella",
+      "samples": [],
+      "category": "premade",
+      "fine_tuning": {
+        "model_id": "eleven_turbo_v2_5",
+        "is_allowed_to_fine_tune": true,
+        "finetuning_state": "not_finetuned"
+      },
+      "labels": {
+        "accent": "american",
+        "description": "soft",
+        "age": "young",
+        "gender": "female",
+        "use_case": "audiobook"
+      },
+      "description": "Soft and gentle, Bella's voice is perfect for audiobooks and meditation content.",
+      "preview_url": "https://storage.googleapis.com/eleven-public-prod/premade/voices/EXAVITQu4vr4xnSDxMaL/3e5f2d1a-4b7c-4d5e-9f8a-2b3c4d5e6f7a.mp3",
+      "available_for_tiers": [],
+      "settings": {
+        "stability": 0.7,
+        "similarity_boost": 0.85
+      }
+    },
+    {
+      "voice_id": "custom_voice_123",
+      "name": "CustomVoice",
+      "samples": [],
+      "category": "generated",
+      "fine_tuning": {
+        "model_id": "eleven_turbo_v2_5",
+        "is_allowed_to_fine_tune": false,
+        "finetuning_state": "not_finetuned"
+      },
+      "labels": {
+        "accent": "british",
+        "description": "custom",
+        "age": "middle_aged",
+        "gender": "male",
+        "use_case": "general"
+      },
+      "description": "A custom generated voice for testing purposes.",
+      "preview_url": "https://storage.googleapis.com/eleven-public-prod/generated/voices/custom_voice_123/preview.mp3",
+      "available_for_tiers": [],
+      "settings": {
+        "stability": 0.5,
+        "similarity_boost": 0.75
+      }
+    }
+  ]
+}

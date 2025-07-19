@@ -1,0 +1,14 @@
+#!/bin/bash
+# Development mode speak command - uses free providers to save costs
+
+# Force pyttsx3 for development
+export TTS_PROVIDER=pyttsx3
+
+# Disable ElevenLabs to prevent accidental usage
+unset ELEVENLABS_API_KEY
+
+# Add development mode indicator
+echo -e "\033[0;33m[DEV MODE] Using offline TTS to save API credits\033[0m" >&2
+
+# Pass through to main speak command
+exec "$(dirname "$0")/speak" "$@"

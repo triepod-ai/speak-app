@@ -1,0 +1,71 @@
+#!/bin/bash
+# Speak command with usage tracking and cost display
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Save text content before calling speak
+TEXT=""
+PIPED_INPUT=false
+
+# Check for piped input first
+if [[ -p /dev/stdin ]]; then
+    # Read piped input
+    TEXT=$(cat)
+    PIPED_INPUT=true
+fi
+
+# Run speak command
+"$SCRIPT_DIR/speak" "$@"
+SPEAK_EXIT=$?
+
+# Show quick cost info if successful
+if [ $SPEAK_EXIT -eq 0 ]; then
+    # If not piped input, extract text from arguments
+    if [ "$PIPED_INPUT" = false ]; then
+        # Parse arguments to extract text
+        set -- "$@"  # Reset positional parameters
+        while [[ $# -gt 0 ]]; do
+            case $1 in
+                -o|--off|-l|--list|-t|--test|-e|--enable|-d|--disable|-s|--status|--list-voices|-h|--help)
+                    shift
+                    ;;
+                -p|--provider|-v|--voice|--stability|--similarity-boost|--test-voice)
+                    shift 2
+                    ;;
+                -*)
+                    shift
+                    ;;
+                *)
+                    # Collect all remaining arguments as text
+                    TEXT="$*"
+                    break
+                    ;;
+            esac
+        done
+    fi
+    
+    # Get character count
+    CHARS=$(echo -n "$TEXT" | wc -c)
+    
+    # Quick cost calculation (OpenAI default)
+    PROVIDER=${TTS_PROVIDER:-openai}
+    case $PROVIDER in
+        elevenlabs)
+            COST=$(python3 -c "print(f'{$CHARS * 0.00033:.5f}')")
+            ;;
+        openai)
+            COST=$(python3 -c "print(f'{$CHARS * 0.000015:.5f}')")
+            ;;
+        *)
+            COST="0.00000"
+            ;;
+    esac
+    
+    # Show cost (only if not free)
+    if [ "$COST" != "0.00000" ] && [ $CHARS -gt 0 ]; then
+        echo -e "\033[0;90m[TTS: $CHARS chars, ~\$$COST via $PROVIDER]\033[0m" >&2
+    fi
+fi
+
+exit $SPEAK_EXIT
