@@ -141,4 +141,4 @@ This release extracts and enhances the TTS functionality previously embedded in 
 
 ---
 
-For more information about upcoming features and to contribute ideas, please visit the [project repository](https://github.com/yourusername/speak).
+For more information about upcoming features and to contribute ideas, please visit the [project repository](https://github.com/triepod-ai/speak-app).

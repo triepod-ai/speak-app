@@ -2,9 +2,9 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yourusername/speak)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20WSL-lightgrey.svg)]()
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/triepod-ai/speak-app)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/triepod-ai/speak-app/blob/main/LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20WSL-lightgrey.svg)](https://github.com/triepod-ai/speak-app)
 
 **A cost-optimized, multi-provider text-to-speech command-line tool with intelligent caching and batch processing**
 
@@ -42,6 +42,23 @@
 - API keys for cloud providers (optional):
   - ElevenLabs API key for high-quality AI voices
   - OpenAI API key for alternative AI voices
+
+### Install from GitHub
+
+```bash
+# Clone the repository
+git clone https://github.com/triepod-ai/speak-app.git
+cd speak-app
+
+# Make scripts executable
+chmod +x speak speak-*
+
+# Add to PATH (add to ~/.bashrc or ~/.bash_profile)
+export PATH="$PATH:$(pwd)"
+
+# Or create symlink (recommended)
+sudo ln -sf $(pwd)/speak /usr/local/bin/speak
+```
 
 ### Verify Installation
 
@@ -450,6 +467,6 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed version history.
 
 <div align="center">
 
-**Created by Bryan Thomas** • [Report Bug](https://github.com/yourusername/speak/issues) • [Request Feature](https://github.com/yourusername/speak/issues)
+**Created by Bryan Thomas** • [Report Bug](https://github.com/triepod-ai/speak-app/issues) • [Request Feature](https://github.com/triepod-ai/speak-app/issues)
 
 </div>

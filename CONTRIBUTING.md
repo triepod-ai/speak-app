@@ -19,7 +19,7 @@ This project follows a standard code of conduct. Please be respectful and constr
 
 ## Getting Started
 
-1. Fork the repository
+1. Fork the repository on GitHub: https://github.com/triepod-ai/speak-app
 2. Clone your fork locally
 3. Create a new branch for your feature or bugfix
 4. Make your changes
@@ -38,9 +38,12 @@ This project follows a standard code of conduct. Please be respectful and constr
 ### Local Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/speak.git
-cd speak
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/speak-app.git
+cd speak-app
+
+# Add upstream remote
+git remote add upstream https://github.com/triepod-ai/speak-app.git
 
 # Create a development branch
 git checkout -b feature/your-feature-name
@@ -225,12 +228,36 @@ Types: feat, fix, docs, style, refactor, test, chore
 
 ### Pull Request Process
 
-1. Update documentation
-2. Add tests for new functionality
-3. Ensure all tests pass
-4. Update CHANGELOG.md
-5. Submit PR with clear description
-6. Respond to review feedback
+1. Sync your fork with upstream:
+   ```bash
+   git fetch upstream
+   git merge upstream/main
+   ```
+
+2. Update documentation for your changes
+
+3. Add tests for new functionality
+
+4. Ensure all tests pass:
+   ```bash
+   ./run_all_tests.sh
+   ```
+
+5. Push to your fork:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+6. Create a Pull Request on GitHub:
+   - Go to https://github.com/triepod-ai/speak-app
+   - Click "Pull requests" → "New pull request"
+   - Select your fork and branch
+   - Fill in the PR template with details about your changes
+   - Submit the PR for review
+
+7. Update CHANGELOG.md if needed
+
+8. Respond to review feedback promptly
 
 ### PR Description Template
 
@@ -257,6 +284,8 @@ Brief description of changes
 
 ## Reporting Issues
 
+Please report issues on GitHub: https://github.com/triepod-ai/speak-app/issues
+
 ### Bug Reports
 
 Include:
@@ -269,7 +298,7 @@ Include:
 
 ### Feature Requests
 
-Include:
+Submit feature requests as GitHub issues with:
 - Use case description
 - Proposed implementation
 - Alternative solutions considered
