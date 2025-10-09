@@ -1,0 +1,18 @@
+[
+  {
+    "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+    "transcript_path": "/home/bryan/.claude/projects/-home-bryan-speak-app/d83a02ef-54bc-4d79-87eb-d4442f328bd5.jsonl",
+    "cwd": "/home/bryan/speak-app",
+    "permission_mode": "plan",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "looking at our speak implementation, we need to identify overengineering bloat.. this is a simple tts app that our ~/multi-agent-observability tool uses.. it looks like we have a lot of phase* documents, and we need to figure out how to maintain our funtionality and remove any overenginerred bloat"
+  },
+  {
+    "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+    "transcript_path": "/home/bryan/.claude/projects/-home-bryan-speak-app/d83a02ef-54bc-4d79-87eb-d4442f328bd5.jsonl",
+    "cwd": "/home/bryan/speak-app",
+    "permission_mode": "acceptEdits",
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "should we commit this first in case we accidently remove code we need?"
+  }
+]

@@ -1,0 +1,181 @@
+{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Notification tracking with observability events",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/send_event_async.py --source-app speak-app --event-type Notification --summarize"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Post-tool tracking with observability events",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/post_tool_use_with_correlation.py | uv run /home/bryan/speak-app//.claude/hooks/send_event_async.py --source-app speak-app --event-type PostToolUse --summarize"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Pre-compact hook with observability",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/pre_compact.py"
+          },
+          {
+            "type": "command",
+            "comment": "Pre-compact with observability events",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/send_event_async.py --source-app speak-app --event-type PreCompact --summarize"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Safety hook - blocks dangerous operations",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/pre_tool_use_safety.py"
+          },
+          {
+            "type": "command",
+            "comment": "Pre-tool tracking with observability events",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/pre_tool_use_with_correlation.py | uv run /home/bryan/speak-app//.claude/hooks/send_event_async.py --source-app speak-app --event-type PreToolUse --summarize"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Session end handler (updates PROJECT_STATUS.md and Redis)",
+            "command": "uv run --with redis /home/bryan/speak-app//.claude/hooks/session_end.py"
+          },
+          {
+            "type": "command",
+            "comment": "Session end with observability events",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/send_event_async.py --source-app speak-app --event-type SessionEnd --summarize"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Load session context from Redis/fallback",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/session_context_loader.py"
+          },
+          {
+            "type": "command",
+            "comment": "TTS notification for new sessions",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/session_startup_notifier.py"
+          },
+          {
+            "type": "command",
+            "comment": "Track session start event",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/session_event_tracker.py"
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Load session context from Redis/fallback",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/session_context_loader.py"
+          },
+          {
+            "type": "command",
+            "comment": "TTS notification for resumed sessions",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/session_resume_detector.py"
+          },
+          {
+            "type": "command",
+            "comment": "Track session resume event",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/session_event_tracker.py"
+          }
+        ]
+      },
+      {
+        "matcher": "clear",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Track session clear event",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/session_event_tracker.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Session stop with local logging",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/stop.py --chat"
+          },
+          {
+            "type": "command",
+            "comment": "Session stop with observability events",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/send_event_async.py --source-app speak-app --event-type Stop --summarize"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "Subagent stop tracking with observability",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/subagent_stop.py"
+          },
+          {
+            "type": "command",
+            "comment": "Subagent stop with observability events",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/send_event_async.py --source-app speak-app --event-type SubagentStop --summarize"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "comment": "User prompt tracking (local logs)",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/user_prompt_submit.py --log-only"
+          },
+          {
+            "type": "command",
+            "comment": "User prompt with observability events",
+            "command": "uv run /home/bryan/speak-app//.claude/hooks/send_event_async.py --source-app speak-app --event-type UserPromptSubmit --summarize"
+          }
+        ]
+      }
+    ]
+  }
+}
