@@ -1,0 +1,139 @@
+[
+  {
+    "tool_name": "unknown",
+    "tool_input": {},
+    "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+    "correlation_id": "6ea1a135-17b3-4356-8083-68b02d25c928",
+    "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+    "payload": {
+      "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+      "transcript_path": "/home/bryan/.claude/projects/-home-bryan-speak-app/d83a02ef-54bc-4d79-87eb-d4442f328bd5.jsonl",
+      "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+      "permission_mode": "acceptEdits",
+      "hook_event_name": "PreToolUse",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "git status",
+        "description": "Check git status"
+      }
+    }
+  },
+  {
+    "tool_name": "unknown",
+    "tool_input": {},
+    "tool_output": "",
+    "success": true,
+    "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+    "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+    "payload": {
+      "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+      "transcript_path": "/home/bryan/.claude/projects/-home-bryan-speak-app/d83a02ef-54bc-4d79-87eb-d4442f328bd5.jsonl",
+      "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+      "permission_mode": "acceptEdits",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "ls -la | grep claude",
+        "description": "Check for claude files"
+      },
+      "tool_response": {
+        "stdout": "",
+        "stderr": "",
+        "interrupted": false,
+        "isImage": false,
+        "returnCodeInterpretation": "No matches found"
+      }
+    },
+    "correlation_id": "6ea1a135-17b3-4356-8083-68b02d25c928"
+  },
+  {
+    "tool_name": "unknown",
+    "tool_input": {},
+    "tool_output": "",
+    "success": true,
+    "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+    "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+    "payload": {
+      "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+      "transcript_path": "/home/bryan/.claude/projects/-home-bryan-speak-app/d83a02ef-54bc-4d79-87eb-d4442f328bd5.jsonl",
+      "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+      "permission_mode": "acceptEdits",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "pwd",
+        "description": "Check current directory"
+      },
+      "tool_response": {
+        "stdout": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+        "stderr": "",
+        "interrupted": false,
+        "isImage": false
+      }
+    }
+  },
+  {
+    "tool_name": "unknown",
+    "tool_input": {},
+    "tool_output": "",
+    "success": true,
+    "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+    "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+    "payload": {
+      "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+      "transcript_path": "/home/bryan/.claude/projects/-home-bryan-speak-app/d83a02ef-54bc-4d79-87eb-d4442f328bd5.jsonl",
+      "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+      "permission_mode": "acceptEdits",
+      "hook_event_name": "PostToolUse",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "git status",
+        "description": "Check git status"
+      },
+      "tool_response": {
+        "stdout": "On branch main\nYour branch is ahead of 'origin/main' by 2 commits.\n  (use \"git push\" to publish your local commits)\n\nChanges not staged for commit:\n  (use \"git add/rm <file>...\" to update what will be committed)\n  (use \"git restore <file>...\" to discard changes in working directory)\n\tdeleted:    advanced_priority_queue.py\n\tdeleted:    audio_library_research.py\n\tdeleted:    audio_stream_manager.py\n\tdeleted:    connection_pool.py\n\tdeleted:    enhanced_playback_coordinator.py\n\tdeleted:    lazy_loader.py\n\tdeleted:    message_aggregator.py\n\tdeleted:    openai_streaming_client.py\n\tdeleted:    openai_tts_optimized.py\n\tdeleted:    performance_monitor.py\n\tdeleted:    personalization_engine.py\n\tdeleted:    playback_coordinator.py\n\tdeleted:    provider_health_monitor.py\n\tdeleted:    sound_effects_engine.py\n\tdeleted:    streaming_coordinator.py\n\tdeleted:    transcript_processor.py\n\tdeleted:    user_profile_manager.py\n\tmodified:   ../../../../logs/d83a02ef-54bc-4d79-87eb-d4442f328bd5/send_event.json\n\tmodified:   ../../../../logs/d83a02ef-54bc-4d79-87eb-d4442f328bd5/user_prompt_submit.json\n\nUntracked files:\n  (use \"git add <file>...\" to include in what will be committed)\n\tlogs/\n\nno changes added to commit (use \"git add\" and/or \"git commit -a\")",
+        "stderr": "",
+        "interrupted": false,
+        "isImage": false
+      }
+    }
+  },
+  {
+    "tool_name": "unknown",
+    "tool_input": {},
+    "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+    "correlation_id": "b4ae9766-8a65-473f-944b-d74c3066a8f9",
+    "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+    "payload": {
+      "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+      "transcript_path": "/home/bryan/.claude/projects/-home-bryan-speak-app/d83a02ef-54bc-4d79-87eb-d4442f328bd5.jsonl",
+      "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+      "permission_mode": "acceptEdits",
+      "hook_event_name": "PreToolUse",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "cd /home/bryan/speak-app && ls -lh .claude/hooks/utils/tts/",
+        "description": "Check remaining TTS files from root"
+      }
+    }
+  },
+  {
+    "tool_name": "unknown",
+    "tool_input": {},
+    "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+    "correlation_id": "07f2c722-465a-47cf-af2a-b907cb17c686",
+    "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+    "payload": {
+      "session_id": "d83a02ef-54bc-4d79-87eb-d4442f328bd5",
+      "transcript_path": "/home/bryan/.claude/projects/-home-bryan-speak-app/d83a02ef-54bc-4d79-87eb-d4442f328bd5.jsonl",
+      "cwd": "/home/bryan/speak-app/.claude/hooks/utils/tts",
+      "permission_mode": "acceptEdits",
+      "hook_event_name": "PreToolUse",
+      "tool_name": "Bash",
+      "tool_input": {
+        "command": "cd /home/bryan/speak-app && wc -l .claude/hooks/utils/tts/*.py 2>/dev/null | tail -1",
+        "description": "Count remaining lines"
+      }
+    }
+  }
+]
