@@ -182,3 +182,6 @@ temp/
 *.tmp
 *.bak
 *.backup
+
+# Runtime logs
+logs/
