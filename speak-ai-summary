@@ -10,6 +10,7 @@
 """
 Speak AI Summary - Intelligent TTS summaries for rich context events.
 Reads rich context JSON from stdin and generates natural TTS output.
+Features: Rate limiting, metric extraction, deduplication.
 """
 
 import os
@@ -17,7 +18,7 @@ import sys
 import json
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 try:
     from dotenv import load_dotenv
     from openai import OpenAI
@@ -34,6 +35,77 @@ if env_path.exists():
     except:
         pass
 
+# Import rate limiting/deduplication
+try:
+    sys.path.insert(0, str(Path.home() / "multi-agent-observability-system" / ".claude" / "hooks"))
+    from utils.tts.message_deduplicator import should_speak_message
+    DEDUPLICATION_AVAILABLE = True
+except ImportError:
+    DEDUPLICATION_AVAILABLE = False
+
+def extract_metrics(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract actionable metrics from context for inclusion in TTS.
+
+    Args:
+        context: Rich context data from hooks
+
+    Returns:
+        Dict with extracted metrics
+    """
+    metrics = {
+        "files": 0,
+        "tests": 0,
+        "errors": 0,
+        "duration": None,
+        "items": 0,
+        "changes": 0
+    }
+
+    # Extract from context field
+    ctx = context.get("context", {})
+    if isinstance(ctx, dict):
+        metrics["files"] = ctx.get("files_affected", 0)
+        metrics["errors"] = ctx.get("error_count", 0)
+
+    # Extract from metrics field
+    metric_data = context.get("metrics", {})
+    if isinstance(metric_data, dict):
+        metrics["duration"] = metric_data.get("duration_ms")
+        if "error" in metric_data.get("severity", "").lower():
+            metrics["errors"] = max(metrics["errors"], 1)
+
+    # Extract from payload (for hook events)
+    payload = context.get("payload", {})
+    if isinstance(payload, dict):
+        # Test results
+        if "tests_run" in payload:
+            metrics["tests"] = payload.get("tests_run", 0)
+        if "tests_passed" in payload:
+            metrics["tests"] = payload.get("tests_passed", 0)
+
+        # File operations
+        if "files_affected" in payload:
+            metrics["files"] = payload.get("files_affected", 0)
+        if "files_modified" in payload:
+            metrics["files"] = max(metrics["files"], payload.get("files_modified", 0))
+
+        # Error tracking
+        if "error_occurred" in payload and payload["error_occurred"]:
+            metrics["errors"] += 1
+
+        # Duration
+        if "duration_ms" in payload:
+            metrics["duration"] = payload.get("duration_ms")
+
+    # Extract from error_info
+    error_info = context.get("error_info", {})
+    if isinstance(error_info, dict) and error_info.get("has_error"):
+        metrics["errors"] = max(metrics["errors"], 1)
+
+    return metrics
+
+
 def enhance_summary(summary: str, context: dict) -> Optional[str]:
     """
     Enhance summary using AI for more natural speech with filtering.
@@ -45,8 +117,26 @@ def enhance_summary(summary: str, context: dict) -> Optional[str]:
     Returns:
         Enhanced summary suitable for TTS (or None if should be skipped)
     """
-    # Filter out generic unknowns
+    # Filter out generic unknowns (only lowercase 'unknown' means truly unavailable)
     summary_lower = summary.lower()
+
+    # Check if this is a truly unknown operation (lowercase 'unknown' from improved extraction)
+    if summary_lower.startswith("unknown ") and "completed" in summary_lower:
+        # Check if we have other meaningful context to work with
+        tool_name = context.get("tool_name", "")
+        project_name = context.get("project_context", {}).get("name", "")
+
+        # If we have specific context (file, command, etc.), don't filter
+        if context.get("context", {}).get("file_name") or \
+           context.get("context", {}).get("command_type") or \
+           context.get("context", {}).get("search_pattern"):
+            # Keep it - we can enhance with specific details
+            pass
+        else:
+            # Truly generic, filter it out
+            return None
+
+    # Legacy filters for old-style Unknown (capitalized)
     skip_phrases = [
         "unknown executed",
         "unknown in multi-agent",
@@ -70,18 +160,66 @@ def enhance_summary(summary: str, context: dict) -> Optional[str]:
 
         client = OpenAI(api_key=api_key)
 
+        # Extract metrics from context
+        metrics = extract_metrics(context)
+
+        # Build metric context for prompt
+        metric_hints = []
+        if metrics["files"] > 0:
+            metric_hints.append(f"{metrics['files']} file{'s' if metrics['files'] > 1 else ''}")
+        if metrics["tests"] > 0:
+            metric_hints.append(f"{metrics['tests']} test{'s' if metrics['tests'] > 1 else ''}")
+        if metrics["errors"] > 0:
+            metric_hints.append(f"{metrics['errors']} error{'s' if metrics['errors'] > 1 else ''}")
+        if metrics["duration"] and metrics["duration"] > 5000:  # Over 5 seconds
+            duration_sec = int(metrics["duration"] / 1000)
+            metric_hints.append(f"{duration_sec}s")
+
+        metric_context = ", ".join(metric_hints) if metric_hints else ""
+
         # Build enhancement prompt based on severity
         severity = context.get("metrics", {}).get("severity", "normal")
 
         if severity == "notable":
-            prompt = """Convert this into a brief, important notification (max 8 words).
-Rules: NO training data mentions, NO meta-commentary. State what happened clearly."""
+            prompt = f"""Convert this into a brief, important notification (max 8 words).
+Include specific metrics when available: {metric_context}
+Rules: NO training data mentions, NO meta-commentary. State what happened clearly with numbers.
+
+Examples with metrics:
+- "Fixed 3 bugs in authentication"
+- "Code review complete: 5 files"
+- "Tests passing: all 12 passed"
+- "Session done, 3 files updated"
+
+Generate the notification:"""
         elif severity == "urgent":
-            prompt = """Convert this into a brief, urgent alert (max 6 words).
-Rules: NO training data mentions, NO apologies. State the issue only."""
+            prompt = f"""Convert this into a brief, urgent alert (max 6 words).
+Include error count if available: {metric_context}
+Rules: NO training data mentions, NO apologies. State the issue only.
+
+Examples with metrics:
+- "Build failed: 2 errors"
+- "Tests failing: 3 broken"
+- "Critical: auth system down"
+
+Generate the alert:"""
         else:
-            prompt = """Convert this into a brief, casual update (max 8 words).
-Rules: NO training data mentions, NO meta-commentary. Be direct and clear."""
+            prompt = f"""Convert this into a brief, casual update (max 8 words).
+Include specific metrics when available: {metric_context}
+Rules: NO training data mentions, NO meta-commentary. Be direct and clear with numbers.
+
+Examples with metrics:
+- "Updated 3 files in client"
+- "Ran tests: all 5 passed"
+- "Search complete: 12 matches"
+- "Command done in 3 seconds"
+
+For generic completions without metrics, use short phrases:
+- "Task complete"
+- "All set"
+- "Done"
+
+Generate the update:"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -213,6 +351,14 @@ def main():
 
         with open(log_file, "a") as f:
             f.write(f"[{timestamp}] ENHANCED: {enhanced_summary}\n")
+
+        # Check rate limiting / deduplication
+        if DEDUPLICATION_AVAILABLE:
+            should_speak = should_speak_message(enhanced_summary, rich_context)
+            if not should_speak:
+                with open(log_file, "a") as f:
+                    f.write(f"[{timestamp}] RATE_LIMITED: Message suppressed by deduplicator\n")
+                return
 
         # Speak the summary
         speak_summary(enhanced_summary)
