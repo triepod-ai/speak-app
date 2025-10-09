@@ -1,0 +1,232 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "openai>=1.0.0",
+#   "python-dotenv>=1.0.0",
+# ]
+# ///
+
+"""
+Speak AI Summary - Intelligent TTS summaries for rich context events.
+Reads rich context JSON from stdin and generates natural TTS output.
+"""
+
+import os
+import sys
+import json
+import subprocess
+from pathlib import Path
+from typing import Optional
+try:
+    from dotenv import load_dotenv
+    from openai import OpenAI
+except ImportError:
+    # Fallback without AI enhancement
+    pass
+
+# Load environment
+env_path = Path.home() / "brainpods" / ".env"
+if env_path.exists():
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(env_path)
+    except:
+        pass
+
+def enhance_summary(summary: str, context: dict) -> Optional[str]:
+    """
+    Enhance summary using AI for more natural speech with filtering.
+
+    Args:
+        summary: Basic summary text
+        context: Rich context data
+
+    Returns:
+        Enhanced summary suitable for TTS (or None if should be skipped)
+    """
+    # Filter out generic unknowns
+    summary_lower = summary.lower()
+    skip_phrases = [
+        "unknown executed",
+        "unknown in multi-agent",
+        "unknown tool"
+    ]
+
+    for phrase in skip_phrases:
+        if phrase in summary_lower:
+            return None
+
+    # Check if AI enhancement is available
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        # No AI available, use original if meaningful
+        if "unknown" in summary_lower and len(summary.split()) < 5:
+            return None
+        return summary
+
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=api_key)
+
+        # Build enhancement prompt based on severity
+        severity = context.get("metrics", {}).get("severity", "normal")
+
+        if severity == "notable":
+            prompt = """Convert this into a brief, important notification (max 8 words).
+Rules: NO training data mentions, NO meta-commentary. State what happened clearly."""
+        elif severity == "urgent":
+            prompt = """Convert this into a brief, urgent alert (max 6 words).
+Rules: NO training data mentions, NO apologies. State the issue only."""
+        else:
+            prompt = """Convert this into a brief, casual update (max 8 words).
+Rules: NO training data mentions, NO meta-commentary. Be direct and clear."""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": summary}
+            ],
+            max_tokens=30,
+            temperature=0.3
+        )
+
+        enhanced = response.choices[0].message.content.strip()
+
+        # Remove quotes if present
+        for quote in ['"', "'"]:
+            if enhanced.startswith(quote) and enhanced.endswith(quote):
+                enhanced = enhanced[1:-1]
+
+        # Filter out bad AI responses
+        enhanced_lower = enhanced.lower()
+        bad_phrases = [
+            "trained on data",
+            "training data",
+            "knowledge cutoff",
+            "as of my last",
+            "i don't have",
+            "i cannot"
+        ]
+
+        for phrase in bad_phrases:
+            if phrase in enhanced_lower:
+                # AI misbehaved, skip or use original
+                if "unknown" in summary_lower:
+                    return None
+                return summary
+
+        return enhanced
+
+    except Exception:
+        # Fallback: use original summary if meaningful
+        if "unknown" in summary_lower and len(summary.split()) < 5:
+            return None
+        return summary
+
+def speak_summary(text: str, use_queue: bool = True):
+    """Call the speak command to announce the summary."""
+    try:
+        # Check if TTS is enabled
+        if os.getenv("TTS_ENABLED", "true").lower() != "true":
+            return
+
+        if use_queue:
+            # Use queue system to prevent simultaneous speech
+            queue_script = Path(__file__).parent / "tts" / "tts_queue.py"
+            if queue_script.exists():
+                subprocess.run(
+                    ["python3", str(queue_script), text],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=30
+                )
+            else:
+                # Fallback to direct speak
+                subprocess.run(
+                    ["speak", text],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=5
+                )
+        else:
+            # Direct speak (for backwards compatibility)
+            subprocess.run(
+                ["speak", text],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=5
+            )
+    except Exception:
+        # Silently fail - TTS is non-critical
+        pass
+
+def main():
+    try:
+        # Setup logging
+        log_dir = Path("/tmp/tts-queue")
+        log_dir.mkdir(exist_ok=True)
+        log_file = log_dir / "speak-ai-summary.log"
+
+        # Read rich context from stdin
+        input_data = sys.stdin.read()
+        if not input_data.strip():
+            return
+
+        # Log input
+        with open(log_file, "a") as f:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            f.write(f"\n[{timestamp}] INPUT: {input_data[:200]}\n")
+
+        # Parse JSON
+        try:
+            rich_context = json.loads(input_data)
+        except json.JSONDecodeError:
+            # If not JSON, treat as plain text
+            with open(log_file, "a") as f:
+                f.write(f"[{timestamp}] WARN: Not JSON, using as plain text\n")
+            speak_summary(input_data.strip()[:100])
+            return
+
+        # Extract summary
+        summary = rich_context.get("summary", "")
+        if not summary:
+            # Fallback: construct from available data
+            tool_name = rich_context.get("tool_name", "Operation")
+            project = rich_context.get("project_context", {}).get("name", "project")
+            summary = f"{tool_name} in {project}"
+
+        with open(log_file, "a") as f:
+            f.write(f"[{timestamp}] SUMMARY: {summary}\n")
+
+        # Enhance summary with AI if available
+        enhanced_summary = enhance_summary(summary, rich_context)
+
+        if enhanced_summary is None:
+            # Message was filtered
+            with open(log_file, "a") as f:
+                f.write(f"[{timestamp}] FILTERED: Summary filtered out\n")
+            return
+
+        with open(log_file, "a") as f:
+            f.write(f"[{timestamp}] ENHANCED: {enhanced_summary}\n")
+
+        # Speak the summary
+        speak_summary(enhanced_summary)
+
+        with open(log_file, "a") as f:
+            f.write(f"[{timestamp}] SPOKEN: Successfully queued/spoken\n")
+
+    except Exception as e:
+        # Log error but don't crash
+        try:
+            with open(log_file, "a") as f:
+                f.write(f"[{timestamp}] ERROR: {str(e)[:200]}\n")
+        except:
+            pass
+
+if __name__ == "__main__":
+    main()
