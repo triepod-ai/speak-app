@@ -74,19 +74,75 @@ def speak_with_openai(
             # Write response content to file (avoiding deprecated stream_to_file)
             for chunk in response.iter_bytes():
                 tmp_file.write(chunk)
-        
-        # Play the audio using pygame
-        pygame.mixer.init()
-        pygame.mixer.music.load(tmp_path)
-        pygame.mixer.music.play()
-        
-        # Wait for playback to complete
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
-        
-        # Cleanup
-        pygame.mixer.quit()
-        os.unlink(tmp_path)
+
+        # Detect WSL and use appropriate playback method
+        import subprocess
+        import platform
+        import shutil
+        import time
+
+        is_wsl = "microsoft" in platform.uname().release.lower()
+
+        if is_wsl:
+            # WSL: Use Windows MediaPlayer class for audio playback
+            try:
+                # Convert WSL path to Windows path
+                win_path = subprocess.check_output(['wslpath', '-w', tmp_path], text=True).strip()
+
+                # PowerShell script using MediaPlayer (System.Windows.Media)
+                ps_script = f"""
+                Add-Type -AssemblyName PresentationCore
+                $mediaPlayer = New-Object System.Windows.Media.MediaPlayer
+                $mediaPlayer.Open([uri]"{win_path}")
+                $mediaPlayer.Play()
+                Start-Sleep -Seconds 1
+                while ($mediaPlayer.Position.TotalSeconds -lt $mediaPlayer.NaturalDuration.TimeSpan.TotalSeconds) {{
+                    Start-Sleep -Milliseconds 100
+                }}
+                $mediaPlayer.Stop()
+                $mediaPlayer.Close()
+                """
+
+                result = subprocess.run(
+                    ['powershell.exe', '-Command', ps_script],
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+
+                if result.returncode != 0 and result.stderr:
+                    print(f"PowerShell error: {result.stderr}", file=sys.stderr)
+
+            except Exception as e:
+                print(f"Windows audio playback error: {e}", file=sys.stderr)
+            finally:
+                # Cleanup after playback
+                time.sleep(0.5)
+                try:
+                    os.unlink(tmp_path)
+                except:
+                    pass
+        else:
+            # Native Linux: Use pygame
+            try:
+                pygame.mixer.init()
+                pygame.mixer.music.load(tmp_path)
+                pygame.mixer.music.play()
+
+                # Wait for playback to complete
+                while pygame.mixer.music.get_busy():
+                    pygame.time.Clock().tick(10)
+
+                # Cleanup
+                pygame.mixer.quit()
+                os.unlink(tmp_path)
+            except Exception as e:
+                print(f"pygame audio playback error: {e}", file=sys.stderr)
+                # Cleanup on error
+                try:
+                    os.unlink(tmp_path)
+                except:
+                    pass
         
         return True
         

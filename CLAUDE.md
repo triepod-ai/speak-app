@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Speak is a cost-optimized, universal text-to-speech command-line tool with intelligent provider fallback, batch processing, and automatic caching system.
 
+## Installation
+
+For complete installation instructions, see **[INSTALLATION.md](INSTALLATION.md)**
+
+**Quick setup checklist:**
+1. Clone repo to `~/speak-app`
+2. Create symlinks in `~/bin` for all `speak*` commands
+3. Add `~/bin` to PATH in `~/.bash_aliases`
+4. Configure TTS environment variables in `~/.bash_aliases` (OpenAI recommended)
+5. Source `~/.bash_aliases` and test with `speak --status`
+
 ## Key Architecture
 
 ### Provider System
@@ -26,6 +37,16 @@ Speak is a cost-optimized, universal text-to-speech command-line tool with intel
 - Non-blocking execution for CLI integration
 - **All providers execute scripts directly** to respect shebang: `cmd = [str(script_path), text]`
 - This ensures `uv` handles dependencies automatically for all providers
+
+### Audio Playback Architecture
+- **Native Linux**: Uses `pygame.mixer` for audio playback with ALSA/PulseAudio
+- **WSL2 Auto-Detection**: Automatically detects Windows Subsystem for Linux environments
+- **WSL Audio Solution**: Uses `System.Windows.Media.MediaPlayer` via PowerShell
+  - Detects WSL by checking for "microsoft" in `platform.uname().release`
+  - Converts Linux paths to Windows paths using `wslpath -w`
+  - Plays audio through Windows audio subsystem (no visible windows)
+  - Handles WSLGd audio issues automatically
+- **Fallback Strategy**: If pygame fails, gracefully degrades without breaking execution
 
 ### Observability System (`tts/observability.py`)
 - **Event Priority Levels**: CRITICAL (100%) → HIGH (80%) → NORMAL (50%) → LOW (20%) → MINIMAL (5%)

@@ -10,6 +10,8 @@
 
 [Features](#features) • [Installation](#installation) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Examples](#examples)
 
+📖 **[Complete Installation Guide](INSTALLATION.md)** • 💰 **[Cost Optimization](SETUP_OPENAI.md)**
+
 </div>
 
 ---
@@ -32,52 +34,57 @@
 - 🌐 **Global Access**: Available from any directory via PATH
 - 🔌 **Script-Friendly**: Silent mode and conditional execution options
 - 🤖 **Claude Code Integration**: Voice notifications for AI coding operations
+- 🪟 **WSL2 Compatible**: Automatic Windows audio support for Windows Subsystem for Linux
 
 ## 📦 Installation
+
+### Quick Install
+
+```bash
+# Clone and set up in ~/bin
+cd ~ && git clone https://github.com/triepod-ai/speak-app.git
+mkdir -p ~/bin
+ln -sf ~/speak-app/speak ~/bin/speak
+echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bash_aliases
+source ~/.bash_aliases
+
+# Configure TTS provider (OpenAI recommended for 95% cost savings)
+cat >> ~/.bash_aliases << 'EOF'
+
+# Speak App TTS Configuration
+export TTS_ENABLED=true
+export TTS_PROVIDER=openai
+export OPENAI_API_KEY="your-key-here"
+export OPENAI_TTS_VOICE=onyx
+export ENGINEER_NAME="Your Name"
+EOF
+
+source ~/.bash_aliases
+
+# Test installation
+speak --status
+speak "Installation complete"
+```
+
+📖 **For detailed installation instructions**, see **[INSTALLATION.md](INSTALLATION.md)**
 
 ### Prerequisites
 
 - Python 3.11 or higher
-- `uv` package manager (for Python script execution)
-- API keys for cloud providers (optional):
-  - ElevenLabs API key for high-quality AI voices
-  - OpenAI API key for alternative AI voices
-
-### Install from GitHub
-
-```bash
-# Clone the repository
-git clone https://github.com/triepod-ai/speak-app.git
-cd speak-app
-
-# Make scripts executable
-chmod +x speak speak-*
-
-# Add to PATH (add to ~/.bashrc or ~/.bash_profile)
-export PATH="$PATH:$(pwd)"
-
-# Or create symlink (recommended)
-sudo ln -sf $(pwd)/speak /usr/local/bin/speak
-```
-
-### Verify Installation
-
-The `speak` command is pre-installed at `/home/bryan/bin/speak-app/` with a symlink in PATH:
-
-```bash
-# Check if speak is available
-which speak
-# Output: /home/bryan/bin/speak
-
-# Verify installation
-speak --status
-```
+- `uv` package manager (install: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- API keys for cloud providers:
+  - **OpenAI API key** (recommended) - Get from [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+  - ElevenLabs API key (optional, premium) - Get from [elevenlabs.io](https://elevenlabs.io)
 
 ### Directory Structure
 
 ```
-/home/bryan/bin/speak-app/
+~/speak-app/
 ├── speak                # Main executable
+├── speak-batch          # Batch processing
+├── speak-costs          # Cost analysis
+├── speak-dev            # Development mode (offline)
+├── speak-with-tracking  # Usage tracking
 ├── tts/                 # TTS provider infrastructure
 │   ├── tts_provider.py  # Provider selection logic
 │   ├── elevenlabs_tts.py
@@ -85,6 +92,7 @@ speak --status
 │   └── pyttsx3_tts.py
 ├── docs/                # Detailed documentation
 ├── examples/            # Usage examples
+├── INSTALLATION.md      # Complete installation guide
 └── README.md           # This file
 ```
 

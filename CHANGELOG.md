@@ -5,6 +5,23 @@ All notable changes to the Speak TTS Command will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-09
+
+### Fixed
+- **WSL2 Audio Support**: Fixed audio playback in Windows Subsystem for Linux environments
+  - Added automatic WSL detection using `platform.uname().release`
+  - Implemented Windows MediaPlayer integration via PowerShell for WSL environments
+  - Audio now plays through Windows audio subsystem without visible windows
+  - Resolves WSLGd I/O errors that prevented PulseAudio connectivity
+  - Maintains pygame playback for native Linux systems
+  - No manual configuration required - automatic detection and fallback
+
+### Documentation
+- Added WSL-specific troubleshooting section to INSTALLATION.md
+- Updated CLAUDE.md with Audio Playback Architecture details
+- Enhanced AUDIO_TEST_GUIDE.md with WSL audio testing procedures
+- Documented automatic WSL detection and Windows audio integration
+
 ## [1.1.1] - 2025-01-19
 
 ### Fixed

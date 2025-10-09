@@ -189,6 +189,39 @@ Tests show latency measurements:
 3. Check TTS is enabled: `speak --status`
 4. Try offline provider: `speak --provider pyttsx3 "Test"`
 
+### WSL-Specific Audio Issues
+
+**If running in WSL2 (Windows Subsystem for Linux)**:
+
+1. **Automatic WSL Detection**: The speak app automatically detects WSL and uses Windows audio
+   ```bash
+   # Verify WSL detection
+   python3 -c "import platform; print('WSL:', 'microsoft' in platform.uname().release.lower())"
+   ```
+
+2. **Audio plays through Windows**: No visible windows appear - audio plays via Windows MediaPlayer
+   ```bash
+   # Test WSL audio
+   speak "Testing WSL audio playback"
+   ```
+
+3. **Common WSL audio issues**:
+   - **Windows volume muted**: Check Windows system tray volume
+   - **Audio device disconnected**: Ensure audio device is active in Windows
+   - **WSL restart needed**: Run `wsl --shutdown` from Windows PowerShell, then reopen terminal
+
+4. **PowerShell verification**:
+   ```bash
+   # Test PowerShell access
+   powershell.exe -Command "Write-Host 'PowerShell accessible'"
+   ```
+
+5. **Manual audio test**:
+   ```bash
+   # Direct OpenAI TTS test in WSL
+   ~/speak-app/tts/openai_tts.py "WSL audio test"
+   ```
+
 ### API Key Issues
 
 ```bash
