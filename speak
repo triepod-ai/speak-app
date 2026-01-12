@@ -89,7 +89,7 @@ list_providers() {
     fi
     
     echo -e "${BLUE}Checking available TTS providers...${NC}"
-    python3 "$TTS_PROVIDER_SCRIPT" --list 2>/dev/null || {
+    "$TTS_PROVIDER_SCRIPT" --list 2>/dev/null || {
         # Fallback if --list is not implemented
         python3 -c "
 import sys
@@ -186,8 +186,8 @@ speak_text() {
         cmd_args+=("--provider" "$provider")
     fi
     
-    # Call the TTS provider
-    python3 "$TTS_PROVIDER_SCRIPT" "${cmd_args[@]}" 2>/dev/null || {
+    # Call the TTS provider (execute directly to use uv shebang)
+    "$TTS_PROVIDER_SCRIPT" "${cmd_args[@]}" 2>/dev/null || {
         echo -e "${RED}TTS failed with provider: $provider${NC}" >&2
         return 1
     }
