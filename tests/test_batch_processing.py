@@ -56,11 +56,15 @@ class MockCacheManagerModule:
 class MockUsageTrackerModule:
     UsageTracker = MockUsageTracker
 
-# Patch the modules in sys.modules before importing speak-batch
+# Store original modules to restore after importing speak-batch
+_original_cache_manager = sys.modules.get('tts.cache_manager')
+_original_usage_tracker = sys.modules.get('tts.usage_tracker')
+
+# Temporarily patch the modules in sys.modules for importing speak-batch
 sys.modules['tts.cache_manager'] = MockCacheManagerModule()
 sys.modules['tts.usage_tracker'] = MockUsageTrackerModule()
 
-# Now import speak-batch
+# Now import speak-batch (will use our mocks)
 import importlib.util
 import importlib.machinery
 
@@ -78,6 +82,18 @@ try:
 except ImportError as e:
     # If there are still import errors, mock them
     print(f"Import error: {e}", file=sys.stderr)
+
+# CRITICAL: Restore original modules IMMEDIATELY after speak-batch is loaded
+# This prevents test pollution when other test files import tts.usage_tracker
+if _original_cache_manager is not None:
+    sys.modules['tts.cache_manager'] = _original_cache_manager
+elif 'tts.cache_manager' in sys.modules:
+    del sys.modules['tts.cache_manager']
+
+if _original_usage_tracker is not None:
+    sys.modules['tts.usage_tracker'] = _original_usage_tracker
+elif 'tts.usage_tracker' in sys.modules:
+    del sys.modules['tts.usage_tracker']
 
 # Extract the classes we need
 BatchTTSGenerator = getattr(speak_batch, 'BatchTTSGenerator', None)
@@ -243,6 +259,7 @@ if not create_common_notifications:
 
 # Add to sys.modules
 sys.modules['speak_batch'] = speak_batch
+
 
 
 class TestBatchTTSGeneratorInitialization:
